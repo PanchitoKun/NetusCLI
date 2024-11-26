@@ -13,17 +13,63 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model User {
-  id       Int    @id @default(autoincrement())
-  Nombre   String
-  Apellido String
-  Correo   String
-  Password String
+model Usuario {
+  id        Int       @id @default(autoincrement())
+  nombre    String
+  correo    String    @unique
+  contrasena String
+  creadoEn  DateTime  @default(now())
+  pedidos   Pedido[]
+  reviews   Review[] // Relación opuesta con Review
 }
 
-///   id          Int      @id @default(autoincrement())
-///  nombre      String
-//  Apellido    String
-//email       String   @unique
-//telefono    String?  // Campo opcional
-//creadoEn    DateTime @default(now())
+model Libro {
+  id          Int           @id @default(autoincrement())
+  titulo      String
+  autor       String
+  precio      Float
+  stock       Int
+  categoria   Categoria     @relation(fields: [categoriaId], references: [id])
+  categoriaId Int
+  pedidos     Pedido[]      // Relación con Pedido
+  PedidoLibro PedidoLibro[] // Relación opuesta con PedidoLibro
+  reviews     Review[]      // Relación opuesta con Review
+}
+
+model Categoria {
+  id     Int     @id @default(autoincrement())
+  nombre String  @unique
+  libros Libro[]
+}
+
+model Pedido {
+  id         Int         @id @default(autoincrement())
+  total      Float
+  creadoEn   DateTime    @default(now())
+  usuario    Usuario     @relation(fields: [usuarioId], references: [id])
+  usuarioId  Int
+  libros     Libro[]     // Relación con Libro
+  PedidoLibro PedidoLibro[] // Relación con PedidoLibro
+}
+
+model PedidoLibro {
+  id        Int     @id @default(autoincrement())
+  pedidoId  Int
+  libroId   Int
+  cantidad  Int
+
+  pedido Pedido @relation(fields: [pedidoId], references: [id])
+  libro  Libro  @relation(fields: [libroId], references: [id])
+
+  @@unique([pedidoId, libroId])
+}
+
+model Review { // Reseña
+  id          Int       @id @default(autoincrement())
+  contenido   String
+  calificacion Int      @default(0)
+  libro       Libro     @relation(fields: [libroId], references: [id])
+  libroId     Int
+  usuario     Usuario   @relation(fields: [usuarioId], references: [id])
+  usuarioId   Int
+}
